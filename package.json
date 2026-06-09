@@ -9,6 +9,7 @@
   "scripts": {
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
+    "netlify:dev": "netlify dev",
     "test": "node --test",
     "check": "node --check server/index.js && node --check public/app.js"
   },

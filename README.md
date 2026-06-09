@@ -51,6 +51,16 @@ npm run check
 
 服务主动限制请求超时、重定向次数和响应体积。公开部署仍应增加平台级速率限制，避免服务被用于大量代理请求。
 
+### Netlify
+
+项目包含 `netlify.toml` 和 Netlify Function 适配层。静态页面从 `public/` 发布，`/api/icons` 和 `/api/icon-file` 由 Netlify Functions 处理。
+
+```bash
+npx netlify dev
+npx netlify deploy
+npx netlify deploy --prod
+```
+
 ## API
 
 ```text
