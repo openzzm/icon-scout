@@ -1,73 +1,180 @@
 # Icon Scout
 
-输入网站网址，发现并下载它声明的 favicon、Apple Touch Icon、Web App Manifest 图标和默认 `/favicon.ico`。
+Discover, preview, convert, and download the icons used by any public website.
 
-## 运行
+[Live Demo](https://icon-scout.netlify.app) · [Repository](https://github.com/openzzm/icon-scout)
 
-要求 Node.js 20 或更高版本，无需安装第三方依赖。
+Icon Scout inspects a website's HTML, Web App Manifest, Apple Touch Icon declarations, and conventional `/favicon.ico` path. It recommends the best available icon while keeping every discovered candidate available for preview and download.
+
+## Features
+
+- Discovers HTML favicon declarations, Apple Touch Icons, Web App Manifest icons, and `/favicon.ico`
+- Resolves relative icon and manifest URLs
+- Detects common image formats and dimensions
+- Recommends the strongest candidate based on source, size, shape, and format
+- Previews and downloads every discovered candidate
+- Downloads the original asset or converts it to PNG, JPEG, or WebP
+- Decodes multi-layer ICO files and converts their highest-resolution image
+- Preserves transparency for PNG and WebP; JPEG uses a white background
+- Supports responsive desktop and mobile layouts
+- Runs as a standalone Node.js service or on Netlify Functions
+- Rejects local, private, link-local, multicast, reserved, and other unsafe network targets
+
+## Quick Start
+
+### Requirements
+
+- Node.js 20 or newer
+- npm
+
+### Install and Run
 
 ```bash
+git clone https://github.com/openzzm/icon-scout.git
+cd icon-scout
+npm install
 npm start
 ```
 
-默认地址为 `http://127.0.0.1:3000`。
+Open [http://127.0.0.1:3000](http://127.0.0.1:3000).
 
-可用环境变量：
+To use a different host or port:
 
 ```bash
-PORT=8080 HOST=0.0.0.0 npm start
+HOST=0.0.0.0 PORT=8080 npm start
 ```
 
-开发时可以使用：
+On Windows PowerShell:
 
-```bash
-npm run dev
-npm test
-npm run check
+```powershell
+$env:HOST = "0.0.0.0"
+$env:PORT = "8080"
+npm start
 ```
 
-## 功能
-
-- 自动补全缺失的 `https://`
-- 解析 HTML 图标声明、Apple Touch Icon 和 Web App Manifest
-- 添加默认 `/favicon.ico` 候选
-- 检测常见图片格式和尺寸
-- 推荐最清晰的候选，同时展示全部图标
-- 通过服务端代理预览和下载
-- 支持按原始格式、PNG、JPEG 或 WebP 下载；JPEG 透明区域使用白色背景
-- 支持将常见网站 `favicon.ico` 中的最高分辨率图层转换为 PNG、JPEG 或 WebP
-- 拦截本机、私有网络、链路本地和保留地址
-- 对页面、Manifest、图标和重定向地址分别执行安全验证
-
-## 部署
-
-这是一个无状态 Node.js HTTP 服务，可以部署到支持常驻 Node.js 进程的平台。生产环境应：
-
-- 设置 `HOST=0.0.0.0` 和平台提供的 `PORT`
-- 使用 HTTPS
-- 在反向代理或平台层配置速率限制
-- 限制实例的出站网络权限
-- 保持 Node.js 为受支持的稳定版本
-
-服务主动限制请求超时、重定向次数和响应体积。公开部署仍应增加平台级速率限制，避免服务被用于大量代理请求。
-
-### Netlify
-
-项目包含 `netlify.toml` 和 Netlify Function 适配层。静态页面从 `public/` 发布，`/api/icons` 和 `/api/icon-file` 由 Netlify Functions 处理。
+## Development
 
 ```bash
+npm run dev       # Start the standalone Node.js server with watch mode
+npm run netlify:dev
+npm test          # Run the Node.js test suite
+npm run check     # Check JavaScript syntax
+```
+
+## Architecture
+
+```text
+public/                 Static frontend and brand assets
+server/                 Discovery, fetching, safety, conversion, and Node server
+netlify/functions/      Netlify Functions adapter
+test/                   Unit and integration tests
+netlify.toml            Netlify build, function, and header configuration
+```
+
+The browser communicates only with the local API. All third-party website requests, icon inspection, and image conversions happen on the server.
+
+### Discovery Flow
+
+1. Normalize and validate the submitted URL.
+2. Resolve DNS and reject unsafe network addresses.
+3. Fetch the page with redirect, timeout, and response-size limits.
+4. Parse icon declarations and the Web App Manifest.
+5. Add `/favicon.ico` as a fallback candidate.
+6. Probe candidates for availability, dimensions, and content type.
+7. Rank and return all candidates with a recommended icon.
+
+## API
+
+### Discover Website Icons
+
+```http
+GET /api/icons?url=https://example.com
+```
+
+Example response:
+
+```json
+{
+  "site": {
+    "url": "https://example.com/",
+    "hostname": "example.com",
+    "title": "Example Domain"
+  },
+  "recommendedId": "icon-1",
+  "icons": [
+    {
+      "id": "icon-1",
+      "url": "https://example.com/favicon.ico",
+      "source": "fallback",
+      "width": 32,
+      "height": 32,
+      "format": "ico",
+      "available": true
+    }
+  ]
+}
+```
+
+### Preview or Download an Icon
+
+```http
+GET /api/icon-file?url=https://example.com/favicon.ico
+GET /api/icon-file?url=https://example.com/favicon.ico&download=1
+GET /api/icon-file?url=https://example.com/favicon.ico&download=1&format=webp
+```
+
+Supported conversion formats:
+
+- `png`
+- `jpeg`
+- `webp`
+
+Omit `format` to preserve the original file.
+
+## Security
+
+Icon Scout performs outbound requests and must be treated as an SSRF-sensitive service.
+
+The application:
+
+- Allows only HTTP and HTTPS URLs
+- Rejects credentials embedded in URLs
+- Resolves and validates target addresses before requests
+- Rejects private, loopback, link-local, multicast, reserved, documentation, and carrier-grade NAT ranges
+- Revalidates redirects and secondary resources
+- Limits request duration, redirect count, response size, and image input size
+- Does not forward user cookies, authorization headers, or arbitrary request headers
+
+For public deployments, also configure platform-level rate limiting and restrict outbound network access where possible.
+
+## Deploy to Netlify
+
+The repository includes a Netlify Functions adapter and a ready-to-use `netlify.toml`.
+
+```bash
+npx netlify login
 npx netlify dev
 npx netlify deploy
 npx netlify deploy --prod
 ```
 
-## API
+Netlify publishes the static frontend from `public/` and serves `/api/icons` and `/api/icon-file` through the function in `netlify/functions/api.mjs`.
 
-```text
-GET /api/icons?url=https://example.com
-GET /api/icon-file?url=https://example.com/favicon.ico
-GET /api/icon-file?url=https://example.com/favicon.ico&download=1
-GET /api/icon-file?url=https://example.com/favicon.ico&download=1&format=png
+## Deploy as a Node.js Service
+
+Run the stateless server on any platform that supports a persistent Node.js process:
+
+```bash
+HOST=0.0.0.0 PORT=3000 npm start
 ```
 
-`/api/icons` 返回推荐图标 ID 和全部候选元数据。`/api/icon-file` 默认以内联方式代理图片，加入 `download=1` 后以附件形式下载。`format` 可选值为 `png`、`jpeg`、`webp`；不提供时保留原始格式。
+Production deployments should use HTTPS, rate limiting, a supported Node.js release, and restricted outbound network permissions.
+
+## Testing
+
+```bash
+npm test
+npm run check
+```
+
+The test suite covers URL normalization, SSRF protections, icon discovery, manifest parsing, candidate ranking, image metadata, ICO decoding, format conversion, the standalone API, and the Netlify Functions adapter.
