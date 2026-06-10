@@ -24,7 +24,7 @@ export async function convertImage(buffer, contentType, requestedFormat = "origi
   if (format === "original") {
     return { buffer, contentType, extension: extensionFromContentType(contentType) };
   }
-  if (!formats[format]) throw new PublicUrlError("不支持的下载格式", 400);
+  if (!formats[format]) throw new PublicUrlError("Unsupported download format", 400);
 
   try {
     let input = buffer;
@@ -40,7 +40,7 @@ export async function convertImage(buffer, contentType, requestedFormat = "origi
     if (format === "jpeg") pipeline = pipeline.flatten({ background: "#ffffff" }).jpeg({ quality: 92 });
     return { buffer: await pipeline.toBuffer(), ...formats[format] };
   } catch {
-    throw new PublicUrlError("无法转换该图标格式", 422);
+    throw new PublicUrlError("Unable to convert this icon", 422);
   }
 }
 

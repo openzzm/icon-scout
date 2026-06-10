@@ -9,7 +9,7 @@ test("normalizeSiteUrl adds https and removes fragments", () => {
 
 test("normalizeSiteUrl rejects unsupported protocols and credentials", () => {
   assert.throws(() => normalizeSiteUrl("file:///etc/passwd"), /HTTP/);
-  assert.throws(() => normalizeSiteUrl("https://user:pass@example.com"), /凭据/);
+  assert.throws(() => normalizeSiteUrl("https://user:pass@example.com"), /credentials/);
 });
 
 test("isPublicIp rejects private and reserved IPv4 addresses", () => {

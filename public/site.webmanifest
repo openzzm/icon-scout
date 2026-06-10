@@ -1,7 +1,7 @@
 {
   "name": "Icon Scout",
   "short_name": "Icon Scout",
-  "description": "发现、预览并下载网站图标。",
+  "description": "Discover, preview, convert, and download website icons.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#08090d",

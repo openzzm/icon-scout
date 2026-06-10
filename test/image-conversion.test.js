@@ -38,7 +38,7 @@ test("converts an image to PNG, JPEG, and WebP", async () => {
 });
 
 test("rejects unsupported output formats", async () => {
-  await assert.rejects(convertImage(transparentPng, "image/png", "svg"), /不支持的下载格式/);
+  await assert.rejects(convertImage(transparentPng, "image/png", "svg"), /Unsupported download format/);
 });
 
 test("converts an ICO containing PNG data to common formats", async () => {

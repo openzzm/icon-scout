@@ -4,7 +4,7 @@ const status = document.querySelector("#status");
 const results = document.querySelector("#results");
 const submit = form.querySelector("button");
 
-const sourceNames = { manifest: "Web App Manifest", "apple-touch": "Apple Touch Icon", html: "HTML 声明", fallback: "默认路径" };
+const sourceNames = { manifest: "Web App Manifest", "apple-touch": "Apple Touch Icon", html: "HTML declaration", fallback: "Default path" };
 
 function proxyUrl(icon, download = false, format = "original") {
   return `/api/icon-file?url=${encodeURIComponent(icon.url)}${download ? "&download=1" : ""}${format !== "original" ? `&format=${format}` : ""}`;
@@ -12,21 +12,21 @@ function proxyUrl(icon, download = false, format = "original") {
 
 function dimensions(icon) {
   if (icon.width && icon.height) return `${icon.width} × ${icon.height}`;
-  return icon.declaredSizes?.join(", ") || "未知尺寸";
+  return icon.declaredSizes?.join(", ") || "Unknown size";
 }
 
 function metadata(icon) {
   return [
-    ["来源", sourceNames[icon.source] || icon.source],
-    ["尺寸", dimensions(icon)],
-    ["格式", (icon.format || "未知").toUpperCase()],
+    ["Source", sourceNames[icon.source] || icon.source],
+    ["Dimensions", dimensions(icon)],
+    ["Format", (icon.format || "Unknown").toUpperCase()],
   ];
 }
 
 function bindIconActions(container, icon) {
   const image = container.querySelector("img");
   image.src = proxyUrl(icon);
-  image.alt = `${dimensions(icon)} 网站图标预览`;
+  image.alt = `${dimensions(icon)} website icon preview`;
   image.addEventListener("error", () => container.classList.add("unavailable"), { once: true });
   const download = container.querySelector(".download-link");
   download.setAttribute("download", "");
@@ -37,13 +37,13 @@ function bindIconActions(container, icon) {
   download.addEventListener("click", async (event) => {
     event.preventDefault();
     const originalText = download.textContent;
-    download.textContent = "正在转换…";
+    download.textContent = "Converting…";
     download.setAttribute("aria-disabled", "true");
     try {
       const response = await fetch(download.href);
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
-        throw new Error(body.error || "下载转换失败");
+        throw new Error(body.error || "Download conversion failed");
       }
       const blobUrl = URL.createObjectURL(await response.blob());
       const temporaryLink = document.createElement("a");
@@ -63,7 +63,7 @@ function bindIconActions(container, icon) {
   container.querySelector(".copy-button").addEventListener("click", async (event) => {
     await navigator.clipboard.writeText(icon.url);
     const original = event.currentTarget.textContent;
-    event.currentTarget.textContent = "已复制";
+    event.currentTarget.textContent = "Copied";
     setTimeout(() => { event.currentTarget.textContent = original; }, 1400);
   });
 }
@@ -103,7 +103,7 @@ function render(data) {
   renderRecommended(recommended);
   const grid = document.querySelector("#candidate-grid");
   grid.replaceChildren(...data.icons.map(renderCandidate));
-  document.querySelector("#candidate-count").textContent = `${data.icons.length} 个候选`;
+  document.querySelector("#candidate-count").textContent = `${data.icons.length} candidates`;
   results.hidden = false;
   results.scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -113,15 +113,15 @@ form.addEventListener("submit", async (event) => {
   submit.disabled = true;
   submit.classList.add("loading");
   status.classList.remove("error");
-  status.textContent = "正在分析网页和图标声明…";
+  status.textContent = "Inspecting the page and its icon declarations…";
   results.hidden = true;
   try {
     const response = await fetch(`/api/icons?url=${encodeURIComponent(input.value)}`);
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "获取失败");
-    if (!data.icons.length) throw new Error("没有发现可用的网站图标");
+    if (!response.ok) throw new Error(data.error || "Unable to fetch website icons");
+    if (!data.icons.length) throw new Error("No usable website icons were found");
     render(data);
-    status.textContent = `已找到 ${data.icons.length} 个候选图标`;
+    status.textContent = `Found ${data.icons.length} icon candidates`;
   } catch (error) {
     status.classList.add("error");
     status.textContent = error.message;

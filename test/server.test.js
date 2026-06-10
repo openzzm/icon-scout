@@ -61,7 +61,7 @@ test("findSiteIcons reports when every discovered icon is unavailable", async ()
   };
   await assert.rejects(
     findSiteIcons("https://example.com", { fetcher, assertUrl: async (url) => url }),
-    /没有发现可用的网站图标/,
+    /No usable website icons were found/,
   );
 });
 
@@ -84,6 +84,6 @@ test("GET /api/icon-file rejects unsupported converted formats", async () => {
   await withServer({ fetcher, assertUrl: async (url) => url }, async (base) => {
     const response = await fetch(`${base}/api/icon-file?url=https://example.com/icon.png&format=svg`);
     assert.equal(response.status, 400);
-    assert.match((await response.json()).error, /不支持的下载格式/);
+    assert.match((await response.json()).error, /Unsupported download format/);
   });
 });

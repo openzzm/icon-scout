@@ -16,7 +16,7 @@ export async function handleApiRequest(request, options = {}) {
   const requestUrl = new URL(request.url);
 
   try {
-    if (request.method !== "GET") return json(405, { error: "只支持 GET 请求" });
+    if (request.method !== "GET") return json(405, { error: "Only GET requests are supported" });
 
     if (requestUrl.pathname === "/api/icons") {
       return json(200, await findSiteIcons(requestUrl.searchParams.get("url"), { assertUrl, fetcher }));
@@ -27,7 +27,7 @@ export async function handleApiRequest(request, options = {}) {
       await assertUrl(iconUrl);
       const icon = await fetcher(iconUrl, { maxBytes: 8 * 1024 * 1024, timeoutMs: 9000 });
       if (!icon.contentType.startsWith("image/") && !icon.contentType.includes("icon")) {
-        throw new PublicUrlError("目标资源不是图标", 415);
+        throw new PublicUrlError("The target resource is not an icon", 415);
       }
       const output = await convertImage(icon.buffer, icon.contentType, requestUrl.searchParams.get("format") ?? "original");
       const disposition = requestUrl.searchParams.get("download") === "1" ? "attachment" : "inline";
@@ -42,10 +42,10 @@ export async function handleApiRequest(request, options = {}) {
       });
     }
 
-    return json(404, { error: "API 不存在" });
+    return json(404, { error: "API route not found" });
   } catch (error) {
     const status = error instanceof PublicUrlError ? error.status : 502;
-    return json(status, { error: error instanceof PublicUrlError ? error.message : "获取网站图标失败" });
+    return json(status, { error: error instanceof PublicUrlError ? error.message : "Unable to fetch website icons" });
   }
 }
 

@@ -69,7 +69,7 @@ button:disabled { cursor: wait; opacity: .7; }
 .candidate-preview { height: 178px; }
 .candidate-preview img { max-width: 48%; max-height: 96px; }
 .candidate.unavailable img { display: none; }
-.candidate.unavailable .candidate-preview::after { content: "无法预览"; color: #626776; font-size: 12px; }
+.candidate.unavailable .candidate-preview::after { content: "Preview unavailable"; color: #626776; font-size: 12px; }
 .candidate-body { padding: 15px; }
 .candidate-top { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }
 .candidate-top span { color: var(--muted); font-size: 11px; }

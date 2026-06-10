@@ -21,13 +21,13 @@ export async function safeFetch(input, options = {}) {
       },
     });
     if (response.status >= 300 && response.status < 400 && response.headers.get("location")) {
-      if (redirect === maxRedirects) throw new PublicUrlError("目标网站重定向次数过多", 502);
+      if (redirect === maxRedirects) throw new PublicUrlError("The target redirected too many times", 502);
       url = new URL(response.headers.get("location"), url);
       continue;
     }
-    if (!response.ok) throw new PublicUrlError(`目标资源返回 HTTP ${response.status}`, 502);
+    if (!response.ok) throw new PublicUrlError(`The target returned HTTP ${response.status}`, 502);
     const contentLength = Number(response.headers.get("content-length") ?? 0);
-    if (contentLength > maxBytes) throw new PublicUrlError("目标资源过大", 413);
+    if (contentLength > maxBytes) throw new PublicUrlError("The target resource is too large", 413);
     const reader = response.body.getReader();
     const chunks = [];
     let size = 0;
@@ -37,7 +37,7 @@ export async function safeFetch(input, options = {}) {
       size += value.length;
       if (size > maxBytes) {
         await reader.cancel();
-        throw new PublicUrlError("目标资源过大", 413);
+        throw new PublicUrlError("The target resource is too large", 413);
       }
       chunks.push(value);
     }
@@ -48,5 +48,5 @@ export async function safeFetch(input, options = {}) {
       buffer: Buffer.concat(chunks.map((chunk) => Buffer.from(chunk))),
     };
   }
-  throw new PublicUrlError("无法获取目标资源", 502);
+  throw new PublicUrlError("Unable to fetch the target resource", 502);
 }

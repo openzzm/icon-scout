@@ -11,16 +11,16 @@ export class PublicUrlError extends Error {
 
 export function normalizeSiteUrl(input) {
   const value = String(input ?? "").trim();
-  if (!value) throw new PublicUrlError("请输入网站网址");
+  if (!value) throw new PublicUrlError("Enter a website URL");
   const withScheme = /^[a-z][a-z\d+.-]*:/i.test(value) ? value : `https://${value}`;
   let url;
   try {
     url = new URL(withScheme);
   } catch {
-    throw new PublicUrlError("网址格式无效");
+    throw new PublicUrlError("The URL is invalid");
   }
-  if (!["http:", "https:"].includes(url.protocol)) throw new PublicUrlError("只支持 HTTP 和 HTTPS 网站");
-  if (url.username || url.password) throw new PublicUrlError("网址不能包含登录凭据");
+  if (!["http:", "https:"].includes(url.protocol)) throw new PublicUrlError("Only HTTP and HTTPS websites are supported");
+  if (url.username || url.password) throw new PublicUrlError("The URL must not contain credentials");
   url.hash = "";
   return url;
 }
@@ -69,12 +69,12 @@ export async function assertPublicUrl(input, lookup = dns.lookup) {
   const url = input instanceof URL ? input : normalizeSiteUrl(input);
   const hostname = url.hostname.replace(/^\[|\]$/g, "").toLowerCase();
   if (hostname === "localhost" || hostname.endsWith(".localhost") || hostname.endsWith(".local")) {
-    throw new PublicUrlError("不支持本机或局域网地址");
+    throw new PublicUrlError("Local and private network addresses are not supported");
   }
   const literalVersion = net.isIP(hostname);
   const records = literalVersion ? [{ address: hostname }] : await lookup(hostname, { all: true, verbatim: true });
   if (!records.length || records.some(({ address }) => !isPublicIp(address))) {
-    throw new PublicUrlError("不支持本机、局域网或保留地址");
+    throw new PublicUrlError("Local, private, and reserved network addresses are not supported");
   }
   return url;
 }

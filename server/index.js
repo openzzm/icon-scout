@@ -54,7 +54,7 @@ export async function findSiteIcons(input, options = {}) {
   const initial = mergeAndRankIcons([...discovered.icons, ...manifestIcons]).slice(0, 24);
   const inspected = await Promise.all(initial.map((icon) => inspectIcon(icon, fetcher)));
   const icons = mergeAndRankIcons(inspected).map((icon, index) => ({ id: `icon-${index + 1}`, ...icon }));
-  if (!icons.some((icon) => icon.available)) throw new PublicUrlError("没有发现可用的网站图标", 404);
+  if (!icons.some((icon) => icon.available)) throw new PublicUrlError("No usable website icons were found", 404);
   return {
     site: { url: page.url.href, hostname: page.url.hostname, title: discovered.title || page.url.hostname },
     recommendedId: icons.find((icon) => icon.available)?.id ?? icons[0]?.id ?? null,
@@ -89,7 +89,7 @@ export function createAppServer(options = {}) {
         const iconUrl = normalizeSiteUrl(reqUrl.searchParams.get("url"));
         await assertUrl(iconUrl);
         const icon = await fetcher(iconUrl, { maxBytes: 8 * 1024 * 1024, timeoutMs: 9000 });
-        if (!icon.contentType.startsWith("image/") && !icon.contentType.includes("icon")) throw new PublicUrlError("目标资源不是图标", 415);
+        if (!icon.contentType.startsWith("image/") && !icon.contentType.includes("icon")) throw new PublicUrlError("The target resource is not an icon", 415);
         const output = await convertImage(icon.buffer, icon.contentType, reqUrl.searchParams.get("format") ?? "original");
         const disposition = reqUrl.searchParams.get("download") === "1" ? "attachment" : "inline";
         res.writeHead(200, {
@@ -102,10 +102,10 @@ export function createAppServer(options = {}) {
         return res.end(output.buffer);
       }
       if (req.method === "GET" && await serveStatic(reqUrl, res)) return;
-      json(res, 404, { error: "页面不存在" });
+      json(res, 404, { error: "Page not found" });
     } catch (error) {
       const status = error instanceof PublicUrlError ? error.status : 502;
-      json(res, status, { error: error instanceof PublicUrlError ? error.message : "获取网站图标失败" });
+      json(res, status, { error: error instanceof PublicUrlError ? error.message : "Unable to fetch website icons" });
     }
   });
 }
